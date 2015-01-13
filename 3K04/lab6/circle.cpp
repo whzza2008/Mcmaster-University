@@ -1,0 +1,116 @@
+#include <libplayerc++/playerc++.h>
+#include <iostream>
+#include <fstream>
+#include <queue>
+
+    using std::ifstream;
+    using namespace PlayerCc;
+    using namespace std;
+
+    std::string  gHostname(PLAYER_HOSTNAME);
+    // NOTE !!! PLAYER_PORTNUM is the port number and has to be unique for each student,
+   // and be set in the plaer server with -p
+    uint32_t        gPort(6677); // Replace this with your port number !!
+class List
+{
+	public:
+		double qX;
+		double qY;
+		void set(double X,double Y);
+};
+void List::set(double X,double Y)
+{
+	qX = X;
+	qY = Y;
+}
+
+
+int main(int argc, char **argv)
+{
+
+  // we throw exceptions on creation if we fail
+  try {
+
+    PlayerClient robot(gHostname, gPort); // Conect to server
+    Position2dProxy pp(&robot, 0);   // Get a motor control device (index is 0)
+
+    std::cout << robot << std::endl;
+
+    pp.SetMotorEnable (true); // Turn on Motors
+    queue<List> my_queue;
+    double preX ;
+    double preY ;
+    double numX;
+    double numY;
+    //queue<List*>::iterator iter;
+    List cl;
+    ifstream indata;
+    indata.open("example.dat");
+    while(!indata.eof()){
+    	indata >> numX;
+	indata >> numY;
+        cl.set(numX,numY);
+	my_queue.push(cl);
+	
+	}
+	
+   /*while(!my_queue.empty()){
+	//cl = my_queue.front();
+	cout << my_queue.front()->qX<<' '<<my_queue.front()->qY<<endl;
+	my_queue.pop();}
+    //cout << cl->qX<<' '<<cl->qY<<endl;*/
+    indata.close();
+	
+    
+    
+    // go into  a loop
+    for(;;){
+	preX = my_queue.front().qX;
+	preY = my_queue.front().qY;
+	double Xpos = pp.GetXPos();
+	double Ypos = pp.GetYPos();
+	double newspeed = 0.5;
+	double turnrate;
+	double dist = sqrt((preX - Xpos)*(preX - Xpos)+(preY - Ypos)*(preY-Ypos));
+	double angle = atan2(preY-Ypos,preX-Xpos);
+	
+	if (dist >0.3){
+		double mis = pp.GetYaw() - angle;
+		double mie = -1*mis;
+		if (((Xpos-preX)>0)&&((Ypos-preY)>0) ){
+			if(mie>3.14){turnrate = mie-6.28;}// number 1 space 3.14+mis
+			else if(mie<-3.14){turnrate = mie+6.28;}
+			else{turnrate = mie;}
+			}
+		else if(((Xpos-preX)<0)&&((Ypos-preY)<0)){
+			if(mis>0){turnrate =  -1*mis;}
+			else{turnrate = -1*mis;}}// number 3 space
+		else if(((Xpos-preX)<0)&&((Ypos-preY)>0)){
+			if(mis<0){turnrate =-1*mis;}
+			else{turnrate= -1*mis;}}//number 2space
+		else if(((Xpos-preX)>0)&&((Ypos-preY)<0)){
+			if(mie>3.14){turnrate = mie-6.28;}//3.14-mis
+			else if(mie<-3.14){turnrate = mie +6.28;}
+			//else if((mis >-0.01)&&(mis<0.01)){turnrate =0;}
+			else{turnrate = mie;}
+		}
+		
+	}
+	else{	cout << "reached"<<preX<<' '<<preY<<endl;
+		my_queue.push(my_queue.front());
+		my_queue.pop();
+		
+		
+	}
+	
+	pp.SetSpeed(newspeed, turnrate);
+	robot.Read();
+	
+     
+    }
+  }
+  catch (PlayerCc::PlayerError & e) {
+    std::cerr << e << std::endl;
+    return -1;
+  }
+}

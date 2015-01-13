@@ -1,0 +1,85 @@
+ #include <libplayerc++/playerc++.h>
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <stdio.h>
+    using namespace PlayerCc;
+    
+    void random_walk(double&,double&);
+    std::string  gHostname(PLAYER_HOSTNAME);
+    // NOTE !!! PLAYER_PORTNUM is the port number and has to be unique for each student,
+   // and be set in the plaer server with -p
+    uint32_t        gPort(6665); // Replace this with your port number !!
+
+
+
+int main(int argc, char **argv)
+{
+  
+
+  FILE*pFile = fopen("log.txt","w");
+  // we throw exceptions on creation if we fail
+  try {
+
+    PlayerClient robot(gHostname, gPort); // Conect to server
+    Position2dProxy pp(&robot, 0);   // Get a motor control device (index is 0)
+
+    std::cout << robot << std::endl;
+
+    pp.SetMotorEnable (true); // Turn on Motors
+    //double newspeed = 0 ;
+    //double newturnrate = 0;
+
+
+    // go into  a loop
+    for(;;){
+      double newspeed;
+      double newturnrate;
+      random_walk(newspeed,newturnrate);
+      pp.SetSpeed(newspeed, newturnrate);
+      robot.Read();
+      double pX = pp.GetXPos();
+      double pY = pp.GetYPos();
+      std::cout << "X :" <<pX<<"\t"<<"Y:"<<pY<< std::endl;
+      fprintf(pFile,"%f,%f,\n",pX,pY);
+      // this blocks until new data comes; 10Hz by default
+      //robot.Read();
+
+      // write commands to robot
+     
+    }
+  }
+  catch (PlayerCc::PlayerError & e) {
+    std::cerr << e << std::endl;
+    return -1;
+  }
+/*void random_walk(Position2dProxy* pp){
+	Position2dProxy cp(&robot, 0);
+	cp = pp;
+	srand(time(NULL));
+	PlayerClient robot(gHostname, gPort); 
+	Position2dProxy pp(&robot, 0);
+	new_speed = rand()%7 - 3;
+	new_rotation = rand()%7-3;
+	
+	cp.SetSpeed(new_speed, new_rotation);
+	double pX;
+	double pY;
+	//for(int tim = 0; tim <= 1;tim++){
+	pX = pp.GetXPos();
+	pY = pp.GetYPos();
+	std::cout << "X :" <<pX<<"\t"<<"Y:"<<pY<< std::endl;
+		//printf("X :",pX);
+		//printf("Y :",pY);
+	robot.Read();
+		//cout << "X :"<< pX<<"\t"<<"Y :"<<pY<<"\n" ;
+//}
+}*/
+}
+
+void random_walk(double& rnew_speed,double& rnew_rotation){
+	srand(time(NULL));
+	rnew_speed = 10;
+	rnew_rotation = 0.4* rnew_rotation+(1-0.4)*(rand()%7+0.28-3.14);
+}
+

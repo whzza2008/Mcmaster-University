@@ -1,0 +1,22 @@
+#include <libplayerc++/playerc++.h>
+#include <iostream>
+#include <math.h>
+#include <stdlib.h>
+#include <time.h>
+#include <stdio.h>
+#include <class8.h>
+class Robot
+{
+        public:
+                Robot(PlayerClient* client, int index); // Open the robot with a specific index setup everything,
+
+		void Tick(void); // Make the robot move
+
+		player_pose2d_t GetPos(void); // Return current position of this robot
+
+        private:
+                Position2dProxy* pos_proxy
+                RangerProxy*  ranger;
+
+		Behavoir *  current_behavior;
+}

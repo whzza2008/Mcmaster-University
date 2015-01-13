@@ -1,0 +1,61 @@
+#include <simple.h>
+
+std::string  gHostname(PlayerCc::PLAYER_HOSTNAME);
+// NOTE !!! PLAYER_PORTNUM is the port number and has to be unique for each student,
+// and be set in the plaer server with -p
+uint32_t        gPort(62421); // Replace this with your port number !!
+
+int main(int argc, char **argv)
+{
+    
+    // we throw exceptions on creation if we fail
+    try {
+        
+        PlayerClient robot(gHostname, gPort); // Conect to server
+        Position2dProxy pp(&robot, 0);   // Get a motor control device (index is 0)
+        
+        std::cout << robot << std::endl;
+        
+        pp.SetMotorEnable (true); // Turn on Motors
+        
+        // IN INIT A BEABVIOR
+        
+        Behaviors* behav;
+        
+        behav = new MoveStraight(&pp); // This could be any of the ones defined above
+        ((MoveStraight*) behav)->Init(1.0); 	// Initialize it accoringely
+        // (NOTE: call the right Init via casting !!)
+        
+        //behav = new Turn(&pp);
+        //((Turn*) behav)->Init(PI_HALF);
+        
+        //behav = new RandomWalk(&pp);
+        
+        
+        // go into  a loop
+        for(;;){
+            
+            
+            // this blocks until new data comes; 10Hz by default
+            robot.Read();
+            if(behav->Tick()){
+                // DONE with Behaviors
+                // change bebavior (I used a queue of Behaviors for testing)
+                // Note call Resume or init on Behaviors gefore using it.
+            }else{
+                
+                // REMEMBER HERE WE WILL (next lab) CHECK IF INTENDED MOVE IS OK
+                // USING behav-> GetIntendedSpeed() and
+                // behav->GetIntendedRotation()
+                
+                behav->DoMove();
+            }
+            // write commands to robot
+            //pp.SetSpeed(newspeed, newturnrate);
+        }
+    }
+    catch (PlayerCc::PlayerError & e) {
+        std::cerr << e << std::endl;
+        return -1;
+    }
+}

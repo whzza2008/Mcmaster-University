@@ -1,0 +1,19 @@
+PlayerClient robot(gHostname, gPort); // Connect to server
+
+    RangerProxy ranger(&robot, 0 ); // Could also be 1 for the laser
+
+   // ONE READ IS NEEDED AT THE BEGINNING TO CONNECT
+   robot.Read();
+
+   // These calls are needed to populate the structure else the calles to other functions
+   // will not work
+   ranger.RequestGeom();
+   ranger.RequestConfigure();
+
+
+   // Now you can get information for example
+   int num = ranger.GetRangeCount(); // Gives you the number of range readings
+   double min_ang=ranger.GetMinAngle (); // Gives the minimum  angle
+   double val = ranger[3]; // gives you the reading with index 3
+   //obviously the angle corespoinding to reading 3 is 
+   double abgle = ranger.GetMinAngle () + 3* ranger.GetRangeRes(); 
